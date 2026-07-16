@@ -40,7 +40,13 @@ import { SignalrService } from '../../core/signalr.service';
     </div>
   `,
   styles: [`
-    .login-wrap { min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; padding: 24px; max-width: 480px; margin: 0 auto; }
+    /* body 不滚动，登录页自己承担滚动（小屏 + 键盘弹出时可滚） */
+    :host { display: block; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .login-wrap {
+      min-height: 100%; display: flex; flex-direction: column; justify-content: center;
+      padding: calc(24px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px));
+      max-width: 480px; margin: 0 auto;
+    }
     .brand { text-align: center; margin-bottom: 24px; }
     .logo { font-size: 56px; }
     .brand h1 { margin: 8px 0 4px; font-size: 28px; font-weight: 800; color: #4a3428; }

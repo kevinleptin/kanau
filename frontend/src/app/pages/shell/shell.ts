@@ -22,22 +22,31 @@ import { SignalrService } from '../../core/signalr.service';
     </nav>
   `,
   styles: [`
-    .shell-content { min-height: 100dvh; }
+    /* app-shell：壳占满视口，内容区内滚，底栏走文档流（iOS 上 fixed 底栏会随视觉视口漂移） */
+    :host { display: flex; flex-direction: column; height: 100%; }
+    .shell-content {
+      flex: 1 1 0; min-height: 0;
+      overflow-y: auto; overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+    }
     .tab-bar {
-      position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
+      flex: none; display: flex;
       height: calc(var(--kanau-tabbar-height) + env(safe-area-inset-bottom, 0px));
       padding-bottom: env(safe-area-inset-bottom, 0px);
-      background: #fff; display: flex;
-      box-shadow: 0 -2px 12px rgba(74, 52, 40, .08);
+      background: #fff;
+      border-top: 0.5px solid rgba(74, 52, 40, .1);
+      box-shadow: 0 -2px 12px rgba(74, 52, 40, .06);
     }
     .tab-item {
       flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 2px; text-decoration: none; color: #b0a094; min-height: 48px;
+      gap: 2px; text-decoration: none; color: #b0a094; -webkit-user-select: none; user-select: none;
     }
-    .tab-icon { font-size: 22px; line-height: 1; filter: grayscale(1) opacity(.6); transition: all .15s; }
+    .tab-icon { font-size: 22px; line-height: 1; filter: grayscale(1) opacity(.6); transition: filter .15s, transform .15s; }
     .tab-label { font-size: 11px; }
     .tab-item.active { color: var(--kanau-primary); font-weight: 600; }
     .tab-item.active .tab-icon { filter: none; transform: scale(1.1); }
+    .tab-item:active .tab-icon { transform: scale(.92); }
   `]
 })
 export class ShellPage implements OnInit {

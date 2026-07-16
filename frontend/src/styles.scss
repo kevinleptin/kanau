@@ -9,16 +9,23 @@
   --kanau-tabbar-height: 64px;
 }
 
+/* App 壳固定为视口高度，滚动只发生在 shell 内容区（iOS 上 body 滚动 + fixed 底栏会漂移） */
 html,
 body {
   margin: 0;
   padding: 0;
   height: 100%;
+  overflow: hidden;
   background: var(--kanau-bg);
   font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB',
     'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
+}
+
+app-root {
+  display: block;
+  height: 100%;
 }
 
 * {
@@ -61,9 +68,9 @@ body {
   box-shadow: var(--kanau-card-shadow);
 }
 
-/* 页面容器（底部为 tab bar 留空间） */
+/* 页面容器（tab bar 在文档流内，无需底部补偿；顶部避让刘海/状态栏） */
 .page {
-  padding: 14px 14px calc(var(--kanau-tabbar-height) + env(safe-area-inset-bottom, 0px) + 20px);
+  padding: calc(14px + env(safe-area-inset-top, 0px)) 14px 24px;
   max-width: 640px;
   margin: 0 auto;
 }
