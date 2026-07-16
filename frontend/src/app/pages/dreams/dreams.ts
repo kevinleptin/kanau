@@ -1,8 +1,6 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import type { EChartsOption } from 'echarts';
-import { NgxEchartsDirective } from 'ngx-echarts';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NzInputModule } from 'ng-zorro-antd/input';
@@ -26,20 +24,17 @@ const AREA_COLORS: Record<PyramidAreaStr, string> = {
   mind: '#ff9a62'
 };
 
-/** 金字塔从顶到底的展示顺序：结果层 → 实现层 → 基础层 */
-const PYRAMID_TOP_DOWN: { area: PyramidAreaStr; width: number; layer: string }[] = [
-  { area: 'wealth', width: 42, layer: '结果层' },
-  { area: 'work', width: 56, layer: '实现层' },
-  { area: 'family', width: 68, layer: '实现层' },
-  { area: 'health', width: 80, layer: '基础层' },
-  { area: 'knowledge', width: 90, layer: '基础层' },
-  { area: 'mind', width: 100, layer: '基础层' }
+/** 书中的三层金字塔（顶→底）：结果层 1 域 / 实现层 2 域 / 基础层 3 域 */
+const PYRAMID_TIERS: { key: string; name: string; sub: string; areas: PyramidAreaStr[] }[] = [
+  { key: 'result', name: '结果层', sub: '自然的产物', areas: ['wealth'] },
+  { key: 'doing', name: '实现层', sub: '达成梦想的手段', areas: ['work', 'family'] },
+  { key: 'base', name: '基础层', sub: '人生的地基', areas: ['health', 'knowledge', 'mind'] }
 ];
 
 @Component({
   selector: 'app-dreams',
   imports: [
-    FormsModule, RouterLink, NgxEchartsDirective, NzButtonModule, NzDatePickerModule,
+    FormsModule, RouterLink, NzButtonModule, NzDatePickerModule,
     NzInputModule, NzModalModule, NzSelectModule, NzSpinModule, NzTagModule, CaptureInput
   ],
   template: `
@@ -49,21 +44,31 @@ const PYRAMID_TOP_DOWN: { area: PyramidAreaStr; width: number; layer: string }[]
         <button nz-button nzType="primary" nzShape="round" (click)="openCreate()">＋ 新梦想</button>
       </div>
 
-      <!-- 金字塔视图 -->
+      <!-- 金字塔视图：三层（基础/实现/结果），空缺领域虚线镂空提示 -->
       <div class="kanau-card">
-        @if (chartOption(); as opt) {
-          <div echarts [options]="opt" class="pyramid-chart"></div>
-        } @else {
-          <div class="center"><nz-spin nzSimple /></div>
-        }
-        @if (emptyAreas().length > 0) {
-          <div class="empty-hints">
-            @for (a of emptyAreas(); track a) {
-              <span class="empty-hint" [style.borderColor]="areaColor(a)" [style.color]="areaColor(a)">
-                {{ areaLabel(a) }}：该领域还没有梦想
-              </span>
+        @if (statsLoaded()) {
+          <div class="pyramid">
+            @for (tier of tiers(); track tier.key) {
+              <div class="tier" [class]="'t-' + tier.key">
+                <div class="tier-label">{{ tier.name }} <span class="tier-sub">{{ tier.sub }}</span></div>
+                <div class="tier-areas">
+                  @for (a of tier.areas; track a.area) {
+                    <span class="area-chip" [class.empty]="a.total === 0" [style.--c]="areaColor(a.area)">
+                      <span class="dot"></span>{{ areaLabel(a.area) }} <b>{{ a.total }}</b>
+                      @if (a.achieved > 0) {
+                        <span class="ach">✓{{ a.achieved }}</span>
+                      }
+                    </span>
+                  }
+                </div>
+              </div>
             }
           </div>
+          @if (emptyAreas().length > 0) {
+            <div class="pyramid-hint">🌱 {{ emptyAreaNames() }} 还空着——空白的领域，正是金字塔想提醒你的</div>
+          }
+        } @else {
+          <div class="center"><nz-spin nzSimple /></div>
         }
       </div>
 
@@ -136,9 +141,25 @@ const PYRAMID_TOP_DOWN: { area: PyramidAreaStr; width: number; layer: string }[]
     .head-row { display: flex; align-items: center; justify-content: space-between; }
     .head-row .page-title { margin: 4px 0; }
     .center { display: flex; justify-content: center; padding: 30px 0; }
-    .pyramid-chart { width: 100%; height: 280px; }
-    .empty-hints { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-    .empty-hint { font-size: 12px; border: 1px dashed; border-radius: 10px; padding: 3px 10px; }
+    .pyramid { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 4px 0 2px; }
+    .tier { padding: 8px 9% 10px; clip-path: polygon(7.5% 0, 92.5% 0, 100% 100%, 0 100%); text-align: center; }
+    .t-result { width: 56%; background: #fdeecd; }
+    .t-doing { width: 79%; background: #ffe7cf; }
+    .t-base { width: 100%; background: #ffddbd; }
+    .tier-label { font-size: 11px; color: #a8632f; margin-bottom: 6px; font-weight: 700; }
+    .tier-sub { font-weight: 400; opacity: .7; margin-left: 4px; }
+    .tier-areas { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+    .area-chip {
+      display: inline-flex; align-items: center; gap: 5px; background: #fff; border-radius: 999px;
+      padding: 3px 9px; font-size: 12px; color: #4a3428; box-shadow: 0 1px 3px rgba(74, 52, 40, .1);
+      white-space: nowrap;
+    }
+    .area-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+    .area-chip b { font-weight: 700; }
+    .area-chip .ach { font-size: 10px; color: #2f9e6e; font-weight: 700; }
+    .area-chip.empty { background: rgba(255, 255, 255, .45); border: 1.5px dashed var(--c); box-shadow: none; color: #a08b7a; padding: 1.5px 7.5px; }
+    .area-chip.empty b { color: var(--c); }
+    .pyramid-hint { margin-top: 10px; font-size: 12px; color: #b26a45; background: #fff4ec; border-radius: 10px; padding: 7px 10px; }
     .section-head { margin: 18px 2px 10px; }
     .section-head h2 { font-size: 16px; font-weight: 700; color: #4a3428; margin: 0; }
     .dream-item { display: block; text-decoration: none; margin-bottom: 12px; }
@@ -163,9 +184,27 @@ export class DreamsPage implements OnInit {
 
   readonly loading = signal(true);
   readonly dreams = signal<DreamDto[]>([]);
-  readonly chartOption = signal<EChartsOption | null>(null);
-  readonly emptyAreas = signal<PyramidAreaStr[]>([]);
+  readonly pyramidStats = signal<PyramidAreaStat[]>([]);
+  readonly statsLoaded = signal(false);
   readonly creating = signal(false);
+
+  readonly tiers = computed(() => {
+    const byArea = new Map(this.pyramidStats().map((s) => [s.area, s]));
+    return PYRAMID_TIERS.map((t) => ({
+      ...t,
+      areas: t.areas.map((area) => ({
+        area,
+        total: byArea.get(area)?.total ?? 0,
+        achieved: byArea.get(area)?.achieved ?? 0
+      }))
+    }));
+  });
+
+  readonly emptyAreas = computed(() =>
+    this.tiers().flatMap((t) => t.areas).filter((a) => a.total === 0).map((a) => a.area)
+  );
+
+  readonly emptyAreaNames = computed(() => this.emptyAreas().map((a) => this.areaLabel(a)).join('、'));
   readonly createMode = signal<'form' | 'capture'>('form');
 
   createVisible = false;
@@ -191,67 +230,11 @@ export class DreamsPage implements OnInit {
       error: () => this.loading.set(false)
     });
     this.api.pyramid().subscribe({
-      next: (stats) => this.buildChart(stats),
-      error: () => void 0
-    });
-  }
-
-  private buildChart(stats: PyramidAreaStat[]): void {
-    const byArea = new Map(stats.map((s) => [s.area, s]));
-    this.emptyAreas.set(PYRAMID_TOP_DOWN.filter((r) => (byArea.get(r.area)?.total ?? 0) === 0).map((r) => r.area));
-
-    const data = PYRAMID_TOP_DOWN.map((row) => {
-      const s = byArea.get(row.area);
-      const total = s?.total ?? 0;
-      return {
-        name: PyramidAreaLabel[row.area],
-        value: row.width,
-        realTotal: total,
-        achieved: s?.achieved ?? 0,
-        layer: row.layer,
-        itemStyle: {
-          color: total > 0 ? AREA_COLORS[row.area] : '#e8ddd2',
-          borderRadius: 6
-        }
-      };
-    });
-
-    this.chartOption.set({
-      tooltip: {
-        trigger: 'item',
-        formatter: (p: unknown) => {
-          const d = (p as { data: { name: string; realTotal: number; achieved: number; layer: string } }).data;
-          return `${d.layer} · ${d.name}<br/>梦想 ${d.realTotal} 个（已实现 ${d.achieved}）`;
-        }
+      next: (stats) => {
+        this.pyramidStats.set(stats);
+        this.statsLoaded.set(true);
       },
-      series: [
-        {
-          type: 'funnel',
-          sort: 'ascending',
-          left: '4%',
-          top: 6,
-          bottom: 6,
-          width: '92%',
-          gap: 5,
-          minSize: '38%',
-          maxSize: '100%',
-          label: {
-            show: true,
-            position: 'inside',
-            formatter: (p: unknown) => {
-              const d = (p as { data: { name: string; realTotal: number } }).data;
-              return d.realTotal > 0 ? `${d.name}  ${d.realTotal}` : `${d.name}  0`;
-            },
-            color: '#fff',
-            fontSize: 13,
-            fontWeight: 'bold'
-          },
-          labelLine: { show: false },
-          itemStyle: { borderWidth: 0 },
-          emphasis: { label: { fontSize: 14 } },
-          data
-        }
-      ]
+      error: () => this.statsLoaded.set(true)
     });
   }
 

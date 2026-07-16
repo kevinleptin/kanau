@@ -6,7 +6,6 @@ import { provideRouter } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideNzI18n, zh_CN } from 'ng-zorro-antd/i18n';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
-import { provideEchartsCore } from 'ngx-echarts';
 import {
   AimOutline, ArrowLeftOutline, AudioOutline, BulbOutline, CalendarOutline, CameraOutline,
   CheckCircleFill, CheckCircleOutline, CheckOutline, ClockCircleOutline, CloseCircleFill,
@@ -40,7 +39,6 @@ export const appConfig: ApplicationConfig = {
       ReloadOutline, RightOutline, RobotOutline, SearchOutline, SendOutline, StarFill,
       StarOutline, SwapRightOutline, UpOutline, UserOutline, VideoCameraOutline
     ]),
-    provideEchartsCore({ echarts: () => import('echarts') }),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',

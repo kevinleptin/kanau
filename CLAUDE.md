@@ -8,7 +8,7 @@
   - Identity + JWT（账号密码，无第三方登录）；Hangfire（MySQL 存储，表前缀 hangfire_）；SignalR `/hubs/capture`
   - 统一捕获管线 `CapturePipeline`：text/audio/image/video → COS 直传 → ASR/OCR 提取 → LLM 修正 → 打标/Embedding → ready（SignalR 推送）
   - `IAiGateway` 路由：修正/打标/Embedding→混元(腾讯云 SDK)；SMART 化/拆解/回顾→DeepSeek（失败降级混元，标记 degraded）；prompt 在 `Infrastructure/Ai/Prompts/`
-- `frontend/` — Angular 21 PWA（standalone + signals），ng-zorro-antd 21、ngx-echarts、@microsoft/signalr、cos-js-sdk-v5；移动端底部 Tab 布局
+- `frontend/` — Angular 21 PWA（standalone + signals），ng-zorro-antd 21、@microsoft/signalr、cos-js-sdk-v5；移动端底部 Tab 布局（梦想金字塔为纯 CSS 三层图，无图表库）
 - `deploy/` — `deploy.sh`（一键发布）、`sync-secrets.sh`（从 /root/cubby-secrets.env + 宝塔面板库生成 appsettings.Production.json）、`kanau.service`（systemd）
 
 ## 部署（本机生产）

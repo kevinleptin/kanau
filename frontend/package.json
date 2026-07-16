@@ -20,9 +20,7 @@
     "@angular/service-worker": "^21.2.0",
     "@microsoft/signalr": "^10.0.0",
     "cos-js-sdk-v5": "^1.10.1",
-    "echarts": "^6.1.0",
     "ng-zorro-antd": "^21.3.2",
-    "ngx-echarts": "^21.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
