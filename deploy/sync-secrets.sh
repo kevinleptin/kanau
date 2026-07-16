@@ -46,13 +46,19 @@ cat > "$TARGET_DIR/appsettings.Production.json" <<EOF
   },
   "Asr": { "Region": "ap-guangzhou", "CallbackUrl": "" },
   "Ocr": { "Region": "ap-guangzhou" },
+  "Hunyuan": {
+    "Endpoint": "https://tokenhub.tencentmaas.com/v1",
+    "ApiKey": "${TOKENHUB_API_KEY}",
+    "ModelLite": "hy3-preview",
+    "ModelEmbedding": "hunyuan-embedding"
+  },
   "DeepSeek": {
     "Endpoint": "https://api.deepseek.com/v1",
     "ApiKey": "${DEEPSEEK_API_KEY}",
     "ModelChat": "deepseek-chat",
     "ModelReasoner": "deepseek-reasoner"
   },
-  "Lbs": { "Key": "${TENCENT_LBS_KEY:-}" }
+  "Lbs": { "Key": "${TENCENT_LBS_KEY:-}", "SecretKey": "${TENCENT_LBS_SK:-}" }
 }
 EOF
 chmod 640 "$TARGET_DIR/appsettings.Production.json"

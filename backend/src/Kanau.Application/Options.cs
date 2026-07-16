@@ -55,6 +55,8 @@ public class DeepSeekOptions
 public class LbsOptions
 {
     public string Key { get; set; } = "";
+    /// <summary>WebService API 签名校验的 SecretKey（控制台选"签名校验"时必填）。</summary>
+    public string SecretKey { get; set; } = "";
 }
 
 public class FfmpegOptions

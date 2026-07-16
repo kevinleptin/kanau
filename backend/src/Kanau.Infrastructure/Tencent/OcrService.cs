@@ -31,11 +31,24 @@ public class LbsService(IHttpClientFactory httpFactory, IOptions<LbsOptions> lbs
         try
         {
             var http = httpFactory.CreateClient("lbs");
-            var url = $"https://apis.map.qq.com/ws/geocoder/v1/?location={lat},{lng}&key={lbsOpt.Value.Key}";
+            // 参数按 key 升序（腾讯 LBS 签名要求），location 值不做 URL 编码参与签名
+            var query = $"key={lbsOpt.Value.Key}&location={lat},{lng}";
+            var url = $"https://apis.map.qq.com/ws/geocoder/v1?{query}";
+            // 控制台开启"签名校验"时附加 sig = md5(path?query + SK)
+            if (!string.IsNullOrEmpty(lbsOpt.Value.SecretKey))
+            {
+                var raw = $"/ws/geocoder/v1?{query}{lbsOpt.Value.SecretKey}";
+                var sig = Convert.ToHexString(System.Security.Cryptography.MD5.HashData(
+                    System.Text.Encoding.UTF8.GetBytes(raw))).ToLowerInvariant();
+                url += $"&sig={sig}";
+            }
             var resp = await http.GetFromJsonAsync<System.Text.Json.JsonElement>(url, ct);
             if (resp.TryGetProperty("status", out var s) && s.GetInt32() == 0 &&
                 resp.TryGetProperty("result", out var r) && r.TryGetProperty("address", out var addr))
                 return addr.GetString();
+            logger.LogWarning("逆地址解析被拒 status={Status} msg={Msg}",
+                resp.TryGetProperty("status", out var s2) ? s2.GetInt32() : -1,
+                resp.TryGetProperty("message", out var m) ? m.GetString() : "");
         }
         catch (Exception ex)
         {
