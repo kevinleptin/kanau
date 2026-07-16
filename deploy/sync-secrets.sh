@@ -10,9 +10,9 @@ JWT_KEY_FILE=/root/.kanau-jwt-key
 [ -f "$SECRETS" ] || { echo "缺少 $SECRETS"; exit 1; }
 set -a; source "$SECRETS"; set +a
 
-# 数据库密码从宝塔面板取（面板管理的 kanau 库）
-DB_PASS=$(sqlite3 /www/server/panel/data/db/database.db "select password from databases where name='kanau' limit 1;")
-[ -n "$DB_PASS" ] || { echo "面板中找不到 kanau 数据库"; exit 1; }
+# 数据库密码（宝塔面板库内为加密存储，明文保存在 cubby-secrets.env）
+DB_PASS="${KANAU_DB_PASSWORD:-}"
+[ -n "$DB_PASS" ] || { echo "cubby-secrets.env 缺少 KANAU_DB_PASSWORD"; exit 1; }
 
 # JWT 签名密钥：首次生成后持久化
 if [ ! -f "$JWT_KEY_FILE" ]; then

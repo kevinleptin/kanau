@@ -1,0 +1,7 @@
+<router-outlet />
+
+@if (updateReady()) {
+  <div class="update-bar">
+    <button type="button" class="update-btn" (click)="reload()">🎉 检测到更新，点击刷新</button>
+  </div>
+}

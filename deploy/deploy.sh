@@ -22,7 +22,7 @@ bash "$REPO/deploy/sync-secrets.sh" "$API_DIR"
 echo "== 构建前端 =="
 cd "$REPO/frontend"
 npx ng build --configuration production
-rsync -a --delete dist/frontend/browser/ "$WEB_DIR/"
+rsync -a --delete --exclude .user.ini dist/frontend/browser/ "$WEB_DIR/"
 
 echo "== 安装/重启服务 =="
 cp "$REPO/deploy/kanau.service" /etc/systemd/system/kanau.service

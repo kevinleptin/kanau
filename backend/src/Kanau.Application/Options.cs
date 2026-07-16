@@ -34,6 +34,8 @@ public class OcrOptions
     public string Region { get; set; } = "ap-guangzhou";
 }
 
+/// <summary>轻量 LLM 通道（OpenAI 兼容）。默认混元官方端点；
+/// 注意 hunyuan-lite 已被腾讯下线，未另行配置可用轻量通道时，AiGateway 自动降级 DeepSeek。</summary>
 public class HunyuanOptions
 {
     public string Endpoint { get; set; } = "https://api.hunyuan.cloud.tencent.com/v1";

@@ -60,7 +60,17 @@ public class AiGateway(
             }
             else
             {
-                result = await CallHunyuanAsync(systemPrompt, userPrompt, ct);
+                try
+                {
+                    result = await CallHunyuanAsync(systemPrompt, userPrompt, ct);
+                }
+                catch (Exception ex)
+                {
+                    // 轻任务通道不可用（如混元 lite 下线且未启用 TokenHub）→ 降级 DeepSeek
+                    logger.LogWarning(ex, "轻任务通道失败，降级 DeepSeek。task={TaskId}", task.Id);
+                    var r = await CallDeepSeekAsync(dsOpt.Value.ModelChat, systemPrompt, userPrompt, ct);
+                    result = r with { Degraded = true };
+                }
             }
 
             task.Status = AiTaskStatus.Succeeded;
@@ -128,8 +138,9 @@ public class AiGateway(
         }
     }
 
-    // ---------- DeepSeek (OpenAI 兼容) ----------
-    private async Task<AiResult> CallDeepSeekAsync(string model, string system, string user, CancellationToken ct)
+    // ---------- OpenAI 兼容通道（DeepSeek / TokenHub 共用） ----------
+    private async Task<AiResult> CallOpenAiCompatAsync(string endpoint, string apiKey, string model,
+        string system, string user, CancellationToken ct)
     {
         var http = httpFactory.CreateClient("deepseek");
         var body = new
@@ -143,15 +154,15 @@ public class AiGateway(
             stream = false,
             temperature = 0.7
         };
-        using var req = new HttpRequestMessage(HttpMethod.Post, $"{dsOpt.Value.Endpoint.TrimEnd('/')}/chat/completions")
+        using var req = new HttpRequestMessage(HttpMethod.Post, $"{endpoint.TrimEnd('/')}/chat/completions")
         {
             Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json")
         };
-        req.Headers.Authorization = new("Bearer", dsOpt.Value.ApiKey);
+        req.Headers.Authorization = new("Bearer", apiKey);
         using var resp = await http.SendAsync(req, ct);
         var raw = await resp.Content.ReadAsStringAsync(ct);
         if (!resp.IsSuccessStatusCode)
-            throw new InvalidOperationException($"DeepSeek HTTP {(int)resp.StatusCode}: {Truncate(raw, 500)}");
+            throw new InvalidOperationException($"LLM HTTP {(int)resp.StatusCode} ({model}): {Truncate(raw, 500)}");
         using var doc = JsonDocument.Parse(raw);
         var root = doc.RootElement;
         var text = root.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
@@ -161,30 +172,18 @@ public class AiGateway(
         return new AiResult(text, model, false, pt, ctk);
     }
 
-    // ---------- 混元 (腾讯云 SDK, TC3 签名) ----------
+    private Task<AiResult> CallDeepSeekAsync(string model, string system, string user, CancellationToken ct) =>
+        CallOpenAiCompatAsync(dsOpt.Value.Endpoint, dsOpt.Value.ApiKey, model, system, user, ct);
+
+    /// <summary>轻任务通道：TokenHub（混元系）。</summary>
+    private Task<AiResult> CallHunyuanAsync(string system, string user, CancellationToken ct) =>
+        CallOpenAiCompatAsync(hyOpt.Value.Endpoint, hyOpt.Value.ApiKey, hyOpt.Value.ModelLite, system, user, ct);
+
+    // ---------- Embedding（腾讯云混元 SDK，GetEmbedding 接口仍在服务） ----------
     private HunyuanClient CreateHunyuanClient()
     {
         var cred = new Credential { SecretId = tcOpt.Value.SecretId, SecretKey = tcOpt.Value.SecretKey };
         return new HunyuanClient(cred, "ap-guangzhou");
-    }
-
-    private async Task<AiResult> CallHunyuanAsync(string system, string user, CancellationToken ct)
-    {
-        var client = CreateHunyuanClient();
-        var req = new ChatCompletionsRequest
-        {
-            Model = hyOpt.Value.ModelLite,
-            Messages =
-            [
-                new Message { Role = "system", Content = system },
-                new Message { Role = "user", Content = user }
-            ],
-            Stream = false
-        };
-        var resp = await client.ChatCompletions(req);
-        var text = resp.Choices?.FirstOrDefault()?.Message?.Content;
-        return new AiResult(text, hyOpt.Value.ModelLite, false,
-            (int)(resp.Usage?.PromptTokens ?? 0), (int)(resp.Usage?.CompletionTokens ?? 0));
     }
 
     // ---------- helpers ----------

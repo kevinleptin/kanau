@@ -1,0 +1,24 @@
+.update-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.update-btn {
+  width: 100%;
+  max-width: 480px;
+  border: none;
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #ff9a62, #ff7847);
+  box-shadow: 0 6px 20px rgba(255, 120, 71, 0.45);
+  cursor: pointer;
+}

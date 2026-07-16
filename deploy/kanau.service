@@ -3,7 +3,7 @@ Description=Kanau (圆梦笔记) ASP.NET Core API
 After=network.target mysqld.service
 
 [Service]
-Type=notify
+Type=simple
 WorkingDirectory=/www/wwwroot/kanau-api
 ExecStart=/www/server/dotnet/10.0.100/dotnet /www/wwwroot/kanau-api/Kanau.Api.dll
 Restart=always
