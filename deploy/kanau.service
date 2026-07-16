@@ -1,0 +1,19 @@
+[Unit]
+Description=Kanau (圆梦笔记) ASP.NET Core API
+After=network.target mysqld.service
+
+[Service]
+Type=notify
+WorkingDirectory=/www/wwwroot/kanau-api
+ExecStart=/www/server/dotnet/10.0.100/dotnet /www/wwwroot/kanau-api/Kanau.Api.dll
+Restart=always
+RestartSec=5
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5100
+Environment=DOTNET_CLI_TELEMETRY_OPTOUT=1
+# AI/腾讯云出境流量走本机 xray 代理，国内直连由 xray 分流
+Environment=ALL_PROXY=
+SyslogIdentifier=kanau
+
+[Install]
+WantedBy=multi-user.target

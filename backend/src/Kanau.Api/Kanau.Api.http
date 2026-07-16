@@ -1,0 +1,6 @@
+@Kanau.Api_HostAddress = http://localhost:5124
+
+GET {{Kanau.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

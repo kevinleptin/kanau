@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kanau.Application\Kanau.Application.csproj" />
+    <ProjectReference Include="..\Kanau.Domain\Kanau.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hangfire.Core" Version="1.8.14" />
+    <PackageReference Include="Hangfire.MySqlStorage" Version="2.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
+    <PackageReference Include="Tencent.QCloud.Cos.Sdk" Version="5.4.51" />
+    <PackageReference Include="TencentCloudSDK.Asr" Version="3.0.1459" />
+    <PackageReference Include="TencentCloudSDK.Hunyuan" Version="3.0.1378" />
+    <PackageReference Include="TencentCloudSDK.Ocr" Version="3.0.1461" />
+    <PackageReference Include="TencentCloudSDK.Sts" Version="3.0.1301" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
