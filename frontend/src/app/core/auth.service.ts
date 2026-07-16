@@ -37,10 +37,8 @@ export class AuthService {
       .pipe(tap((r) => this.store(r)));
   }
 
-  register(userName: string, password: string, nickname: string | null, isChild: boolean): Observable<AuthResponse> {
-    return this.http
-      .post<AuthResponse>('/api/auth/register', { userName, password, nickname, isChild })
-      .pipe(tap((r) => this.store(r)));
+  changePassword(oldPassword: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>('/api/auth/change-password', { oldPassword, newPassword });
   }
 
   private store(r: AuthResponse): void {

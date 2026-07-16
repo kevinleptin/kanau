@@ -11,30 +11,15 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Kanau.Api.Controllers;
 
-public record RegisterRequest(string UserName, string Password, string? Nickname, bool IsChild = false);
 public record LoginRequest(string UserName, string Password);
-public record AuthResponse(string Token, Guid UserId, string UserName, string? Nickname, bool IsChild);
+public record ChangePasswordRequest(string OldPassword, string NewPassword);
+public record AuthResponse(string Token, Guid UserId, string UserName, string? Nickname, bool IsChild, bool IsAdmin);
 
 [ApiController]
 [Route("api/auth")]
 public class AuthController(UserManager<AppUser> userManager, IOptions<JwtOptions> jwtOpt) : ControllerBase
 {
-    [HttpPost("register")]
-    public async Task<ActionResult<AuthResponse>> Register(RegisterRequest req)
-    {
-        var user = new AppUser
-        {
-            Id = Guid.NewGuid(),
-            UserName = req.UserName.Trim(),
-            Nickname = string.IsNullOrWhiteSpace(req.Nickname) ? req.UserName.Trim() : req.Nickname.Trim(),
-            IsChild = req.IsChild,
-            LocationEnabled = false // 默认关闭，孩子账号保持关闭
-        };
-        var result = await userManager.CreateAsync(user, req.Password);
-        if (!result.Succeeded)
-            return BadRequest(new { message = string.Join("；", result.Errors.Select(e => e.Description)) });
-        return Ok(BuildToken(user));
-    }
+    // 注册不开放：账号统一由 admin 在「用户管理」中创建（见 AdminController）。
 
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponse>> Login(LoginRequest req)
@@ -45,15 +30,29 @@ public class AuthController(UserManager<AppUser> userManager, IOptions<JwtOption
         return Ok(BuildToken(user));
     }
 
-    private AuthResponse BuildToken(AppUser user)
+    /// <summary>登录用户修改自己的密码。</summary>
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<ActionResult> ChangePassword(ChangePasswordRequest req)
     {
-        var o = jwtOpt.Value;
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null) return NotFound();
+        var result = await userManager.ChangePasswordAsync(user, req.OldPassword, req.NewPassword);
+        if (!result.Succeeded)
+            return BadRequest(new { message = string.Join("；", result.Errors.Select(e => e.Description)) });
+        return Ok(new { message = "密码已修改" });
+    }
+
+    internal static AuthResponse BuildTokenFor(AppUser user, JwtOptions o)
+    {
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim("name", user.UserName ?? ""),
-            new Claim("isChild", user.IsChild ? "1" : "0")
+            new Claim("isChild", user.IsChild ? "1" : "0"),
+            new Claim("isAdmin", user.IsAdmin ? "1" : "0")
         };
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(o.Key));
         var token = new JwtSecurityToken(
@@ -61,8 +60,10 @@ public class AuthController(UserManager<AppUser> userManager, IOptions<JwtOption
             expires: DateTime.UtcNow.AddMinutes(o.ExpireMinutes),
             signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
         return new AuthResponse(new JwtSecurityTokenHandler().WriteToken(token),
-            user.Id, user.UserName!, user.Nickname, user.IsChild);
+            user.Id, user.UserName!, user.Nickname, user.IsChild, user.IsAdmin);
     }
+
+    private AuthResponse BuildToken(AppUser user) => BuildTokenFor(user, jwtOpt.Value);
 }
 
 [Authorize]

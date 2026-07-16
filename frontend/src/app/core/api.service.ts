@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import {
-  CaptureDto, CosStsCredential, DecomposeDraft, DreamDto, NoteDto, NoteSearchResult,
+  AdminUserDto, CaptureDto, CosStsCredential, DecomposeDraft, DreamDto, NoteDto, NoteSearchResult,
   PagedResult, PlanDto, PyramidAreaStat, ReviewDto, SmartSuggestion, TimelineEntryDto,
   TodayBrief, TodoDto, UserMe
 } from './models';
@@ -26,6 +26,23 @@ export class ApiService {
 
   clearLocations(): Observable<{ cleared: number }> {
     return this.http.post<{ cleared: number }>('/api/users/me/clear-locations', {});
+  }
+
+  // ==================== 用户管理（仅 admin）====================
+  adminListUsers(): Observable<AdminUserDto[]> {
+    return this.http.get<AdminUserDto[]>('/api/admin/users');
+  }
+
+  adminCreateUser(req: { userName: string; password: string; nickname?: string | null; isChild?: boolean }): Observable<unknown> {
+    return this.http.post('/api/admin/users', req);
+  }
+
+  adminResetPassword(id: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`/api/admin/users/${id}/reset-password`, { newPassword });
+  }
+
+  adminDeleteUser(id: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`/api/admin/users/${id}`);
   }
 
   // ==================== 速记输入 (Captures) ====================

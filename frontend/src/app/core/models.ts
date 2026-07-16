@@ -6,6 +6,7 @@ export interface AuthResponse {
   userName: string;
   nickname: string | null;
   isChild: boolean;
+  isAdmin: boolean;
 }
 
 export interface UserMe {
@@ -14,9 +15,22 @@ export interface UserMe {
   nickname: string | null;
   avatarObjectKey: string | null;
   isChild: boolean;
+  isAdmin: boolean;
   locationEnabled: boolean;
   totalPromptTokens: number;
   totalCompletionTokens: number;
+}
+
+export interface AdminUserDto {
+  id: string;
+  userName: string;
+  nickname: string | null;
+  isChild: boolean;
+  isAdmin: boolean;
+  locationEnabled: boolean;
+  totalPromptTokens: number;
+  totalCompletionTokens: number;
+  createdAt: string;
 }
 
 export type CaptureTypeStr = 'text' | 'audio' | 'image' | 'video';

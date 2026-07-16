@@ -126,7 +126,7 @@ public class UsersController(KanauDbContext db) : KanauControllerBase
         if (u == null) return NotFound();
         return Ok(new
         {
-            u.Id, u.UserName, u.Nickname, u.AvatarObjectKey, u.IsChild,
+            u.Id, u.UserName, u.Nickname, u.AvatarObjectKey, u.IsChild, u.IsAdmin,
             u.LocationEnabled, u.TotalPromptTokens, u.TotalCompletionTokens
         });
     }

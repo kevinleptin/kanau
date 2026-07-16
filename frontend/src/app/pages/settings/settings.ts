@@ -68,6 +68,29 @@ import { UserMe } from '../../core/models';
           </div>
         </div>
 
+        <!-- 修改密码 -->
+        <div class="kanau-card setting-card">
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">修改密码</div>
+              <div class="setting-desc">定期更换密码更安全</div>
+            </div>
+            <button nz-button nzSize="small" (click)="showPwd.set(!showPwd())">{{ showPwd() ? '收起' : '修改' }}</button>
+          </div>
+          @if (showPwd()) {
+            <input nz-input type="password" [(ngModel)]="oldPwd" placeholder="当前密码" autocomplete="current-password" />
+            <input nz-input type="password" [(ngModel)]="newPwd" placeholder="新密码(≥6位)" autocomplete="new-password" />
+            <button nz-button nzType="primary" nzBlock [disabled]="!oldPwd || newPwd.length < 6" (click)="changePwd()">确认修改</button>
+          }
+        </div>
+
+        @if (u.isAdmin) {
+          <a class="kanau-card link-card" routerLink="/admin/users">
+            <span>👥 用户管理</span>
+            <span class="arrow">→</span>
+          </a>
+        }
+
         <!-- 未来年表 -->
         <a class="kanau-card link-card" routerLink="/timeline">
           <span>📜 未来年表</span>
@@ -115,8 +138,11 @@ export class SettingsPage implements OnInit {
 
   readonly me = signal<UserMe | null>(null);
   readonly editingNick = signal(false);
+  readonly showPwd = signal(false);
 
   nickDraft = '';
+  oldPwd = '';
+  newPwd = '';
 
   ngOnInit(): void {
     this.api.loadMe().subscribe({
@@ -172,6 +198,17 @@ export class SettingsPage implements OnInit {
           error: () => this.message.error('清除失败，请重试')
         });
       }
+    });
+  }
+
+  changePwd(): void {
+    this.auth.changePassword(this.oldPwd, this.newPwd).subscribe({
+      next: () => {
+        this.message.success('密码已修改');
+        this.showPwd.set(false);
+        this.oldPwd = this.newPwd = '';
+      },
+      error: (err) => this.message.error(err?.error?.message || '修改失败，请检查当前密码')
     });
   }
 

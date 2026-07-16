@@ -18,7 +18,8 @@ export const routes: Routes = [
       { path: 'notes', loadComponent: () => import('./pages/notes/notes').then((m) => m.NotesPage) },
       { path: 'reviews', loadComponent: () => import('./pages/reviews/reviews').then((m) => m.ReviewsPage) },
       { path: 'settings', loadComponent: () => import('./pages/settings/settings').then((m) => m.SettingsPage) },
-      { path: 'timeline', loadComponent: () => import('./pages/settings/timeline').then((m) => m.TimelinePage) }
+      { path: 'timeline', loadComponent: () => import('./pages/settings/timeline').then((m) => m.TimelinePage) },
+      { path: 'admin/users', loadComponent: () => import('./pages/settings/admin-users').then((m) => m.AdminUsersPage) }
     ]
   },
   { path: '**', redirectTo: '' }

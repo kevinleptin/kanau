@@ -12,6 +12,8 @@ public class AppUser : IdentityUser<Guid>
     public string TimeZone { get; set; } = "Asia/Shanghai";
     /// <summary>孩子账号：AI 教练语气更鼓励、语言更简单；位置默认关闭。</summary>
     public bool IsChild { get; set; }
+    /// <summary>管理员：负责创建/管理家庭成员账号（不开放注册）。</summary>
+    public bool IsAdmin { get; set; }
     public bool LocationEnabled { get; set; }
     public long TotalPromptTokens { get; set; }
     public long TotalCompletionTokens { get; set; }

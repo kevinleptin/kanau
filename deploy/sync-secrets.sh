@@ -58,7 +58,8 @@ cat > "$TARGET_DIR/appsettings.Production.json" <<EOF
     "ModelChat": "deepseek-chat",
     "ModelReasoner": "deepseek-reasoner"
   },
-  "Lbs": { "Key": "${TENCENT_LBS_KEY:-}", "SecretKey": "${TENCENT_LBS_SK:-}" }
+  "Lbs": { "Key": "${TENCENT_LBS_KEY:-}", "SecretKey": "${TENCENT_LBS_SK:-}" },
+  "Admin": { "InitialPassword": "${KANAU_ADMIN_PASSWORD:-}" }
 }
 EOF
 chmod 640 "$TARGET_DIR/appsettings.Production.json"

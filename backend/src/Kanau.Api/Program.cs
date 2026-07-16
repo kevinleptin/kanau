@@ -57,7 +57,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             }
         };
     });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(opt =>
+    opt.AddPolicy("AdminOnly", p => p.RequireClaim("isAdmin", "1")));
 
 // ---------- Hangfire (MySQL 存储) ----------
 var hangfireConn = builder.Configuration.GetConnectionString("Hangfire")
@@ -86,11 +87,33 @@ builder.Services.AddCors(opt => opt.AddDefaultPolicy(p => p
 
 var app = builder.Build();
 
-// 自动迁移
+// 自动迁移 + 种子 admin（不开放注册，账号由 admin 管理）
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<KanauDbContext>();
     db.Database.Migrate();
+
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+    if (await userManager.FindByNameAsync("admin") == null)
+    {
+        var initialPwd = builder.Configuration["Admin:InitialPassword"];
+        if (!string.IsNullOrEmpty(initialPwd))
+        {
+            var admin = new AppUser
+            {
+                Id = Guid.NewGuid(), UserName = "admin", Nickname = "管理员",
+                IsAdmin = true, LocationEnabled = false
+            };
+            var created = await userManager.CreateAsync(admin, initialPwd);
+            if (!created.Succeeded)
+                app.Logger.LogError("admin 种子创建失败: {Errors}",
+                    string.Join("；", created.Errors.Select(e => e.Description)));
+        }
+        else
+        {
+            app.Logger.LogWarning("未配置 Admin:InitialPassword，跳过 admin 种子创建");
+        }
+    }
 }
 
 if (app.Environment.IsDevelopment())
