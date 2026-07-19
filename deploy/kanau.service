@@ -9,7 +9,7 @@ ExecStart=/www/server/dotnet/10.0.100/dotnet /www/wwwroot/kanau-api/Kanau.Api.dl
 Restart=always
 RestartSec=5
 Environment=ASPNETCORE_ENVIRONMENT=Production
-Environment=ASPNETCORE_URLS=http://127.0.0.1:5100
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5101
 Environment=DOTNET_CLI_TELEMETRY_OPTOUT=1
 # AI/腾讯云出境流量走本机 xray 代理，国内直连由 xray 分流
 Environment=ALL_PROXY=

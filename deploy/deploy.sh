@@ -31,4 +31,4 @@ systemctl enable kanau >/dev/null 2>&1 || true
 systemctl restart kanau
 
 sleep 3
-systemctl is-active kanau && curl -s --noproxy '*' http://127.0.0.1:5100/api/health && echo && echo "== 部署完成 =="
+systemctl is-active kanau && curl -s --noproxy '*' http://127.0.0.1:5101/api/health && echo && echo "== 部署完成 =="

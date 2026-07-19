@@ -13,9 +13,9 @@
 
 ## 部署（本机生产）
 - 域名 `kanau.apps02.pixiantong.com`（已从 apps03 迁移至 apps02），Nginx vhost `/www/server/panel/vhost/nginx/kanau.apps02.pixiantong.com.conf`
-  - 静态前端根 `/www/wwwroot/kanau.apps02.pixiantong.com`；`/api/`、`/hubs/`（WebSocket）反代 `127.0.0.1:5100`
+  - 静态前端根 `/www/wwwroot/kanau.apps02.pixiantong.com`；`/api/`、`/hubs/`（WebSocket）反代 `127.0.0.1:5101`
   - PWA 关键文件（ngsw-worker.js/ngsw.json/manifest/index.html）no-cache
-- 后端 systemd 服务 `kanau`，发布目录 `/www/wwwroot/kanau-api`，端口 **5100**
+- 后端 systemd 服务 `kanau`，发布目录 `/www/wwwroot/kanau-api`，端口 **5101**（5100 已被 kit-api 占用）
 - MySQL 库 `kanau`/用户 `kanau`（宝塔管理，密码在面板 data/db/database.db）；JWT 密钥 `/root/.kanau-jwt-key`
 - SSL：Let's Encrypt (acme.sh)，证书在 `/www/server/panel/vhost/cert/<域名>/`，由全局 `renew-bt-ssl.sh` 每日自动续签
 - 全量部署：`bash deploy/deploy.sh`
