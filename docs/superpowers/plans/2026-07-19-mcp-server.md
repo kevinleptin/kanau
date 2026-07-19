@@ -29,11 +29,11 @@ apps02 上 kanau 实跑 5101（`systemctl cat kanau` 已是 5101，nginx 反代 
 - Modify: `deploy/deploy.sh`（末行健康检查 URL）
 - Modify: `CLAUDE.md`（端口描述两处：架构注释与部署节）
 
-- [ ] **Step 1:** `deploy/kanau.service` 中 `Environment=ASPNETCORE_URLS=http://127.0.0.1:5100` 改为 `http://127.0.0.1:5101`
-- [ ] **Step 2:** `deploy/deploy.sh` 中 `curl -s --noproxy '*' http://127.0.0.1:5100/api/health` 改为 `5101`
-- [ ] **Step 3:** `CLAUDE.md` 中所有 `5100` 改为 `5101`，并在部署节注明「5100 已被 kit-api 占用」
-- [ ] **Step 4:** `grep -rn 5100 deploy/ CLAUDE.md` 确认无残留
-- [ ] **Step 5:** Commit: `git add -A && git commit -m "修复迁移遗留：kanau 在 apps02 实际端口为 5101"`
+- [x] **Step 1:** `deploy/kanau.service` 中 `Environment=ASPNETCORE_URLS=http://127.0.0.1:5100` 改为 `http://127.0.0.1:5101`
+- [x] **Step 2:** `deploy/deploy.sh` 中 `curl -s --noproxy '*' http://127.0.0.1:5100/api/health` 改为 `5101`
+- [x] **Step 3:** `CLAUDE.md` 中所有 `5100` 改为 `5101`，并在部署节注明「5100 已被 kit-api 占用」
+- [x] **Step 4:** `grep -rn 5100 deploy/ CLAUDE.md` 确认无残留
+- [x] **Step 5:** Commit: `git add -A && git commit -m "修复迁移遗留：kanau 在 apps02 实际端口为 5101"`
 
 ---
 
@@ -48,13 +48,13 @@ apps02 上 kanau 实跑 5101（`systemctl cat kanau` 已是 5101，nginx 反代 
 **Interfaces:**
 - Produces: 实体 `Kanau.Domain.McpOAuthClient { Guid Id; string ClientId; string? ClientName; string RedirectUrisJson; DateTime CreatedAt }`，`db.McpOAuthClients`
 
-- [ ] **Step 1:** csproj `<ItemGroup>` 加包引用：
+- [x] **Step 1:** csproj `<ItemGroup>` 加包引用：
 
 ```xml
 <PackageReference Include="ModelContextProtocol.AspNetCore" Version="1.4.1" />
 ```
 
-- [ ] **Step 2:** `Entities.cs` 末尾追加：
+- [x] **Step 2:** `Entities.cs` 末尾追加：
 
 ```csharp
 /// <summary>claude.ai Connectors 经动态客户端注册（RFC 7591）登记的 OAuth 客户端。</summary>
@@ -69,7 +69,7 @@ public class McpOAuthClient
 }
 ```
 
-- [ ] **Step 3:** `KanauDbContext.cs`：DbSet 区加 `public DbSet<McpOAuthClient> McpOAuthClients => Set<McpOAuthClient>();`；`OnModelCreating` 末尾（其它 `b.Entity<>` 块之后）加：
+- [x] **Step 3:** `KanauDbContext.cs`：DbSet 区加 `public DbSet<McpOAuthClient> McpOAuthClients => Set<McpOAuthClient>();`；`OnModelCreating` 末尾（其它 `b.Entity<>` 块之后）加：
 
 ```csharp
 b.Entity<McpOAuthClient>(e =>
@@ -81,8 +81,8 @@ b.Entity<McpOAuthClient>(e =>
 });
 ```
 
-- [ ] **Step 4:** 构建：`cd /git/repo/kanau/backend && /www/server/dotnet/10.0.100/dotnet build Kanau.slnx`，Expected: `Build succeeded`
-- [ ] **Step 5:** 生成迁移（连接串从生产配置取）：
+- [x] **Step 4:** 构建：`cd /git/repo/kanau/backend && /www/server/dotnet/10.0.100/dotnet build Kanau.slnx`，Expected: `Build succeeded`
+- [x] **Step 5:** 生成迁移（连接串从生产配置取）：
 
 ```bash
 CONN=$(python3 -c "import json;print(json.load(open('/www/wwwroot/kanau-api/appsettings.Production.json'))['ConnectionStrings']['MySql'])")
@@ -93,7 +93,7 @@ DOTNET_ROLL_FORWARD=LatestMajor ConnectionStrings__MySql="$CONN" \
 ```
 
 Expected: Migrations 目录出现 `*_AddMcpOAuthClient.cs`，内容只建 `McpOAuthClients` 一张表（若混入其它变更则停下检查）。注：`dotnet ef` 若未安装，先 `/www/server/dotnet/10.0.100/dotnet tool install -g dotnet-ef` 并用 `~/.dotnet/tools/dotnet-ef`。
-- [ ] **Step 6:** 再构建一次确认迁移代码可编译；Commit: `feat: MCP OAuth 客户端实体与迁移`
+- [x] **Step 6:** 再构建一次确认迁移代码可编译；Commit: `feat: MCP OAuth 客户端实体与迁移`
 
 ---
 
@@ -109,7 +109,7 @@ Expected: Migrations 目录出现 `*_AddMcpOAuthClient.cs`，内容只建 `McpOA
 - Consumes: `McpOAuthClient` / `db.McpOAuthClients`（Task 2）、`JwtOptions`、`UserManager<AppUser>`
 - Produces: 端点 `GET /.well-known/oauth-authorization-server`、`POST /oauth/register`、`GET|POST /oauth/authorize`、`POST /oauth/token`；静态方法 `McpOAuthController.IssueMcpToken(AppUser, JwtOptions) : string`（365 天 JWT，Task 6 测试用）
 
-- [ ] **Step 1:** `Options.cs` 末尾追加：
+- [x] **Step 1:** `Options.cs` 末尾追加：
 
 ```csharp
 public class McpOptions
@@ -119,13 +119,13 @@ public class McpOptions
 }
 ```
 
-- [ ] **Step 2:** `appsettings.json` 根级追加（逗号注意）：
+- [x] **Step 2:** `appsettings.json` 根级追加（逗号注意）：
 
 ```json
 "Mcp": { "PublicBaseUrl": "https://kanau.apps02.pixiantong.com" }
 ```
 
-- [ ] **Step 3:** `Program.cs` 在 `builder.Services.AddControllers();` 附近追加：
+- [x] **Step 3:** `Program.cs` 在 `builder.Services.AddControllers();` 附近追加：
 
 ```csharp
 builder.Services.Configure<McpOptions>(builder.Configuration.GetSection("Mcp"));
@@ -134,7 +134,7 @@ builder.Services.AddMemoryCache();
 
 （`McpOptions` 在 `Kanau.Application` 命名空间，已 using。）
 
-- [ ] **Step 4:** 创建 `backend/src/Kanau.Api/OAuth/McpOAuthController.cs`，完整内容：
+- [x] **Step 4:** 创建 `backend/src/Kanau.Api/OAuth/McpOAuthController.cs`，完整内容：
 
 ```csharp
 using System.IdentityModel.Tokens.Jwt;
@@ -371,8 +371,8 @@ button{width:100%;padding:10px;background:#f59e0b;color:#fff;border:none;border-
 }
 ```
 
-- [ ] **Step 5:** 构建，Expected: `Build succeeded`（0 Error；`$$"""` raw string 内 `{{ }}` 插值注意保持原样）
-- [ ] **Step 6:** Commit: `feat: MCP 最小 OAuth 授权服务器（metadata/DCR/authorize/token, PKCE S256, 365 天 JWT）`
+- [x] **Step 5:** 构建，Expected: `Build succeeded`（0 Error；`$$"""` raw string 内 `{{ }}` 插值注意保持原样）
+- [x] **Step 6:** Commit: `feat: MCP 最小 OAuth 授权服务器（metadata/DCR/authorize/token, PKCE S256, 365 天 JWT）`
 
 ---
 
@@ -390,9 +390,9 @@ button{width:100%;padding:10px;background:#f59e0b;color:#fff;border:none;border-
 
 **Interfaces:**
 - Consumes: `KanauDbContext`、`IBackgroundJobClient`（Hangfire）、`ICapturePipeline`、Task 3 的 McpOptions
-- Produces: `/mcp` Streamable HTTP 端点（JWT 认证），18 个工具
+- Produces: `/mcp` Streamable HTTP 端点（JWT 认证），19 个工具
 
-- [ ] **Step 1:** 创建 `Mcp/McpToolBase.cs`：
+- [x] **Step 1:** 创建 `Mcp/McpToolBase.cs`：
 
 ```csharp
 using System.Security.Claims;
@@ -430,7 +430,7 @@ public abstract class McpToolBase(IHttpContextAccessor http)
 }
 ```
 
-- [ ] **Step 2:** 创建 `Mcp/DreamTools.cs`（5 个工具）：
+- [x] **Step 2:** 创建 `Mcp/DreamTools.cs`（5 个工具）：
 
 ```csharp
 using System.ComponentModel;
@@ -544,7 +544,7 @@ public sealed class DreamTools(KanauDbContext db, IHttpContextAccessor http) : M
 }
 ```
 
-- [ ] **Step 3:** 创建 `Mcp/PlanTools.cs`（3 个工具）：
+- [x] **Step 3:** 创建 `Mcp/PlanTools.cs`（3 个工具）：
 
 ```csharp
 using System.ComponentModel;
@@ -611,7 +611,7 @@ public sealed class PlanTools(KanauDbContext db, IHttpContextAccessor http) : Mc
 }
 ```
 
-- [ ] **Step 4:** 创建 `Mcp/TodoTools.cs`（5 个工具）：
+- [x] **Step 4:** 创建 `Mcp/TodoTools.cs`（5 个工具）：
 
 ```csharp
 using System.ComponentModel;
@@ -705,7 +705,7 @@ public sealed class TodoTools(KanauDbContext db, IHttpContextAccessor http) : Mc
 }
 ```
 
-- [ ] **Step 5:** 创建 `Mcp/NoteTools.cs`（2 个工具，笔记正文在关联 CaptureItem 上）：
+- [x] **Step 5:** 创建 `Mcp/NoteTools.cs`（2 个工具，笔记正文在关联 CaptureItem 上）：
 
 ```csharp
 using System.ComponentModel;
@@ -750,7 +750,7 @@ public sealed class NoteTools(KanauDbContext db, IHttpContextAccessor http) : Mc
 }
 ```
 
-- [ ] **Step 6:** 创建 `Mcp/CaptureTools.cs`（2 个工具）：
+- [x] **Step 6:** 创建 `Mcp/CaptureTools.cs`（2 个工具）：
 
 ```csharp
 using System.ComponentModel;
@@ -796,7 +796,7 @@ public sealed class CaptureTools(KanauDbContext db, IBackgroundJobClient jobs, I
 }
 ```
 
-- [ ] **Step 7:** 创建 `Mcp/ReviewTools.cs`（2 个工具）：
+- [x] **Step 7:** 创建 `Mcp/ReviewTools.cs`（2 个工具）：
 
 ```csharp
 using System.ComponentModel;
@@ -834,7 +834,7 @@ public sealed class ReviewTools(KanauDbContext db, IHttpContextAccessor http) : 
 }
 ```
 
-- [ ] **Step 8:** 修改 `Program.cs`：
+- [x] **Step 8:** 修改 `Program.cs`：
 
 8a. 顶部 using 增加：
 
@@ -895,8 +895,8 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 app.MapMcp("/mcp").RequireAuthorization();
 ```
 
-- [ ] **Step 9:** 构建，Expected: `Build succeeded`
-- [ ] **Step 10:** Commit: `feat: MCP server（/mcp Streamable HTTP，18 个工具，JWT 认证）`
+- [x] **Step 9:** 构建，Expected: `Build succeeded`
+- [x] **Step 10:** Commit: `feat: MCP server（/mcp Streamable HTTP，19 个工具，JWT 认证）`
 
 ---
 
@@ -905,8 +905,8 @@ app.MapMcp("/mcp").RequireAuthorization();
 **Files:**
 - Modify: `/www/server/panel/vhost/nginx/kanau.apps02.pixiantong.com.conf`（服务器文件，不入 git）
 
-- [ ] **Step 1:** 备份：`cp /www/server/panel/vhost/nginx/kanau.apps02.pixiantong.com.conf /tmp/claude-0/-git-repo-kanau/*/scratchpad/kanau-vhost.bak 2>/dev/null || cp ... /root/kanau-vhost.bak`
-- [ ] **Step 2:** 在 443 server 块 `location /api/` 之前插入：
+- [x] **Step 1:** 备份：`cp /www/server/panel/vhost/nginx/kanau.apps02.pixiantong.com.conf /tmp/claude-0/-git-repo-kanau/*/scratchpad/kanau-vhost.bak 2>/dev/null || cp ... /root/kanau-vhost.bak`
+- [x] **Step 2:** 在 443 server 块 `location /api/` 之前插入：
 
 ```nginx
     location /mcp {
@@ -942,9 +942,9 @@ app.MapMcp("/mcp").RequireAuthorization();
     }
 ```
 
-- [ ] **Step 3:** `/www/server/nginx/sbin/nginx -t` Expected: `syntax is ok`；然后 `/www/server/nginx/sbin/nginx -s reload`
-- [ ] **Step 4:** 部署：`bash /git/repo/kanau/deploy/deploy.sh`，Expected: 末尾 `active` + health JSON + `== 部署完成 ==`（迁移在启动时自动执行）
-- [ ] **Step 5:** `journalctl -u kanau -n 30 --no-pager` 无错误；`mysql` 确认 `McpOAuthClients` 表已建（用宝塔 default.db 里的库凭据或 appsettings.Production.json 连接串）
+- [x] **Step 3:** `/www/server/nginx/sbin/nginx -t` Expected: `syntax is ok`；然后 `/www/server/nginx/sbin/nginx -s reload`
+- [x] **Step 4:** 部署：`bash /git/repo/kanau/deploy/deploy.sh`，Expected: 末尾 `active` + health JSON + `== 部署完成 ==`（迁移在启动时自动执行）
+- [x] **Step 5:** `journalctl -u kanau -n 30 --no-pager` 无错误；`mysql` 确认 `McpOAuthClients` 表已建（用宝塔 default.db 里的库凭据或 appsettings.Production.json 连接串）
 
 ---
 
@@ -952,7 +952,7 @@ app.MapMcp("/mcp").RequireAuthorization();
 
 用一个临时测试用户走完整 OAuth + MCP 流程，完成后清理。工作目录用 scratchpad。
 
-- [ ] **Step 1:** 元数据与 401 challenge：
+- [x] **Step 1:** 元数据与 401 challenge：
 
 ```bash
 curl -s https://kanau.apps02.pixiantong.com/.well-known/oauth-authorization-server | python3 -m json.tool
@@ -962,7 +962,7 @@ curl -si -X POST https://kanau.apps02.pixiantong.com/mcp -H 'Content-Type: appli
 
 Expected: 前两个返回合法 JSON（authorization_servers 指向本站）；第三个 `401` 且含 `WWW-Authenticate:` 带 `resource_metadata=`。
 
-- [ ] **Step 2:** DCR 注册：
+- [x] **Step 2:** DCR 注册：
 
 ```bash
 curl -s -X POST https://kanau.apps02.pixiantong.com/oauth/register -H 'Content-Type: application/json' \
@@ -971,7 +971,7 @@ curl -s -X POST https://kanau.apps02.pixiantong.com/oauth/register -H 'Content-T
 
 Expected: 201 + `client_id`。记为 `$CLIENT_ID`。另验证非法域被拒：`"redirect_uris":["https://evil.com/cb"]` → 400。
 
-- [ ] **Step 3:** 造测试用户（Identity V3 hash 可由 python 生成，格式 `0x01|prf|iter|saltLen|salt|subkey`，校验端自适应参数）：
+- [x] **Step 3:** 造测试用户（Identity V3 hash 可由 python 生成，格式 `0x01|prf|iter|saltLen|salt|subkey`，校验端自适应参数）：
 
 ```bash
 python3 - <<'EOF'
@@ -997,7 +997,7 @@ VALUES (UUID(), 'mcptest', 'MCPTEST', '<hash>', REPLACE(UUID(),'-',''), UUID(),
 
 验证：`curl -s -X POST https://kanau.apps02.pixiantong.com/api/auth/login -H 'Content-Type: application/json' -d '{"userName":"mcptest","password":"McpTest#2026"}'` 返回 token。
 
-- [ ] **Step 4:** PKCE + 授权 + 换 token：
+- [x] **Step 4:** PKCE + 授权 + 换 token：
 
 ```bash
 VERIFIER=$(python3 -c "import secrets;print(secrets.token_urlsafe(48))")
@@ -1022,7 +1022,7 @@ TOKEN=$(curl -s -X POST https://kanau.apps02.pixiantong.com/oauth/token \
 
 Expected: 授权页含标题「圆梦笔记」；`$CODE` 非空；`$TOKEN` 非空且 `expires_in=31536000`。附加负例：错误 code_verifier → `invalid_grant`；code 复用 → `invalid_grant`。
 
-- [ ] **Step 5:** MCP 协议流程（Stateless，每请求独立 POST；响应可能是 SSE 格式需截取 `data:` 行）：
+- [x] **Step 5:** MCP 协议流程（Stateless，每请求独立 POST；响应可能是 SSE 格式需截取 `data:` 行）：
 
 ```bash
 MCP=https://kanau.apps02.pixiantong.com/mcp
@@ -1037,15 +1037,15 @@ curl -s "${H[@]}" $MCP -d '{"jsonrpc":"2.0","id":4,"method":"tools/call","params
 curl -s "${H[@]}" $MCP -d '{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"capture_text","arguments":{"text":"MCP 端到端验证记录"}}}'
 ```
 
-Expected: initialize 返回 serverInfo；tools/list 返回 18 个工具；create_todo 返回 todo JSON；list_todos 能看到它；capture_text 返回「已记录」。
+Expected: initialize 返回 serverInfo；tools/list 返回 19 个工具；create_todo 返回 todo JSON；list_todos 能看到它；capture_text 返回「已记录」。
 
-- [ ] **Step 6:** 清理测试数据（SQL：删 mcptest 用户及其 TodoItems/CaptureItems/Notes/AiTasks；删测试注册的 McpOAuthClients 行）；再跑一遍 `curl /api/health` 确认服务正常。
+- [x] **Step 6:** 清理测试数据（SQL：删 mcptest 用户及其 TodoItems/CaptureItems/Notes/AiTasks；删测试注册的 McpOAuthClients 行）；再跑一遍 `curl /api/health` 确认服务正常。
 
 ---
 
 ### Task 7: 文档 + 提交 + push
 
-- [ ] **Step 1:** `CLAUDE.md` 架构节补一行 MCP 说明（/mcp 端点、OAuth 端点、365 天 token、`Mcp:PublicBaseUrl` 配置、nginx 需反代 /mcp /oauth /.well-known/oauth-*）
-- [ ] **Step 2:** 勾选本计划所有完成项，`git add -A && git commit`（信息：`feat: MCP server 上线（claude.ai Connectors 可连接）`）
-- [ ] **Step 3:** `git push origin main`（若 ssh 22 被墙则改用 `ssh.github.com:443` 或提示用户）
-- [ ] **Step 4:** 最终报告：给出 claude.ai 添加 Connector 的操作步骤（Settings → Connectors → Add custom connector → URL `https://kanau.apps02.pixiantong.com/mcp`）
+- [x] **Step 1:** `CLAUDE.md` 架构节补一行 MCP 说明（/mcp 端点、OAuth 端点、365 天 token、`Mcp:PublicBaseUrl` 配置、nginx 需反代 /mcp /oauth /.well-known/oauth-*）
+- [x] **Step 2:** 勾选本计划所有完成项，`git add -A && git commit`（信息：`feat: MCP server 上线（claude.ai Connectors 可连接）`）
+- [x] **Step 3:** `git push origin main`（若 ssh 22 被墙则改用 `ssh.github.com:443` 或提示用户）
+- [x] **Step 4:** 最终报告：给出 claude.ai 添加 Connector 的操作步骤（Settings → Connectors → Add custom connector → URL `https://kanau.apps02.pixiantong.com/mcp`）

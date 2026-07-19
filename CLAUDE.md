@@ -8,6 +8,7 @@
   - Identity + JWT（账号密码，无第三方登录）；Hangfire（MySQL 存储，表前缀 hangfire_）；SignalR `/hubs/capture`
   - 统一捕获管线 `CapturePipeline`：text/audio/image/video → COS 直传 → ASR/OCR 提取 → LLM 修正 → 打标/Embedding → ready（SignalR 推送）
   - `IAiGateway` 路由：修正/打标/Embedding→混元(腾讯云 SDK)；SMART 化/拆解/回顾→DeepSeek（失败降级混元，标记 degraded）；prompt 在 `Infrastructure/Ai/Prompts/`
+  - **MCP server**（claude.ai Connectors）：官方 `ModelContextProtocol.AspNetCore` 挂 `/mcp`（Streamable HTTP、Stateless、JWT 认证），19 个工具在 `Api/Mcp/`；最小 OAuth 2.1 授权服务器在 `Api/OAuth/McpOAuthController.cs`（RFC 8414 metadata + RFC 7591 DCR + authorize/token，PKCE S256，签 365 天 JWT，回调白名单 claude.ai/claude.com）。配置 `Mcp:PublicBaseUrl`；DCR 客户端存表 `McpOAuthClients`，授权码在 IMemoryCache（10 分钟）。nginx 需反代 `/mcp`（buffering off）、`/oauth/`、`/.well-known/oauth-*`。claude.ai 添加方式：Settings → Connectors → Add custom connector → `https://kanau.apps02.pixiantong.com/mcp`
 - `frontend/` — Angular 21 PWA（standalone + signals），ng-zorro-antd 21、@microsoft/signalr、cos-js-sdk-v5；移动端底部 Tab 布局（梦想金字塔为纯 CSS 三层图，无图表库）
 - `deploy/` — `deploy.sh`（一键发布）、`sync-secrets.sh`（从 /root/cubby-secrets.env + 宝塔面板库生成 appsettings.Production.json）、`kanau.service`（systemd）
 
