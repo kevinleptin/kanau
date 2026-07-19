@@ -4,7 +4,7 @@ set -euo pipefail
 
 REPO=/git/repo/kanau
 API_DIR=/www/wwwroot/kanau-api
-WEB_DIR=/www/wwwroot/kanau.apps03.pixiantong.com
+WEB_DIR=/www/wwwroot/kanau.apps02.pixiantong.com
 DOTNET=/www/server/dotnet/10.0.100/dotnet
 export PATH="/root/.nvm/versions/node/v24.16.0/bin:$PATH"
 export DOTNET_CLI_TELEMETRY_OPTOUT=1

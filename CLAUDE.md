@@ -12,8 +12,8 @@
 - `deploy/` — `deploy.sh`（一键发布）、`sync-secrets.sh`（从 /root/cubby-secrets.env + 宝塔面板库生成 appsettings.Production.json）、`kanau.service`（systemd）
 
 ## 部署（本机生产）
-- 域名 `kanau.apps03.pixiantong.com`，Nginx vhost `/www/server/panel/vhost/nginx/kanau.apps03.pixiantong.com.conf`
-  - 静态前端根 `/www/wwwroot/kanau.apps03.pixiantong.com`；`/api/`、`/hubs/`（WebSocket）反代 `127.0.0.1:5100`
+- 域名 `kanau.apps02.pixiantong.com`（已从 apps03 迁移至 apps02），Nginx vhost `/www/server/panel/vhost/nginx/kanau.apps02.pixiantong.com.conf`
+  - 静态前端根 `/www/wwwroot/kanau.apps02.pixiantong.com`；`/api/`、`/hubs/`（WebSocket）反代 `127.0.0.1:5100`
   - PWA 关键文件（ngsw-worker.js/ngsw.json/manifest/index.html）no-cache
 - 后端 systemd 服务 `kanau`，发布目录 `/www/wwwroot/kanau-api`，端口 **5100**
 - MySQL 库 `kanau`/用户 `kanau`（宝塔管理，密码在面板 data/db/database.db）；JWT 密钥 `/root/.kanau-jwt-key`
