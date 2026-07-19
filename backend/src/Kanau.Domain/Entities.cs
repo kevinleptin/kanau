@@ -142,3 +142,14 @@ public class AiTask
     public bool Degraded { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
+
+/// <summary>claude.ai Connectors 经动态客户端注册（RFC 7591）登记的 OAuth 客户端。</summary>
+public class McpOAuthClient
+{
+    public Guid Id { get; set; }
+    public string ClientId { get; set; } = "";
+    public string? ClientName { get; set; }
+    /// <summary>注册的回调地址，JSON 字符串数组。</summary>
+    public string RedirectUrisJson { get; set; } = "[]";
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}

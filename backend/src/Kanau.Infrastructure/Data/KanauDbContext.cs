@@ -32,6 +32,7 @@ public class KanauDbContext(DbContextOptions<KanauDbContext> options)
     public DbSet<Note> Notes => Set<Note>();
     public DbSet<NoteDreamLink> NoteDreamLinks => Set<NoteDreamLink>();
     public DbSet<AiTask> AiTasks => Set<AiTask>();
+    public DbSet<McpOAuthClient> McpOAuthClients => Set<McpOAuthClient>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -123,6 +124,14 @@ public class KanauDbContext(DbContextOptions<KanauDbContext> options)
             e.Property(x => x.Result).HasColumnType("mediumtext");
             e.Property(x => x.Error).HasMaxLength(2000);
             e.Property(x => x.Model).HasMaxLength(100);
+        });
+
+        b.Entity<McpOAuthClient>(e =>
+        {
+            e.HasIndex(x => x.ClientId).IsUnique();
+            e.Property(x => x.ClientId).HasMaxLength(64);
+            e.Property(x => x.ClientName).HasMaxLength(191);
+            e.Property(x => x.RedirectUrisJson).HasColumnType("text");
         });
     }
 }
