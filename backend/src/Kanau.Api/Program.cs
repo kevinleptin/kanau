@@ -76,6 +76,8 @@ builder.Services.AddHangfireServer(opt => opt.WorkerCount = 4);
 
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<ICaptureNotifier, SignalRCaptureNotifier>();
+builder.Services.Configure<McpOptions>(builder.Configuration.GetSection("Mcp"));
+builder.Services.AddMemoryCache();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

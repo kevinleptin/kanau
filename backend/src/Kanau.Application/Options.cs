@@ -64,3 +64,9 @@ public class FfmpegOptions
     public string Path { get; set; } = "/usr/bin/ffmpeg";
     public string WorkDir { get; set; } = "/tmp/kanau-media";
 }
+
+public class McpOptions
+{
+    /// <summary>对外公网基址（OAuth metadata / resource metadata 用），不含尾斜杠。</summary>
+    public string PublicBaseUrl { get; set; } = "https://kanau.apps02.pixiantong.com";
+}
