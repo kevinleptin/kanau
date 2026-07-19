@@ -3,13 +3,16 @@ using System.Text;
 using Hangfire;
 using Hangfire.MySql;
 using Kanau.Api.Hubs;
+using Kanau.Api.Mcp;
 using Kanau.Application;
 using Kanau.Infrastructure;
 using Kanau.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using ModelContextProtocol.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,7 +34,14 @@ builder.Services.AddIdentityCore<AppUser>(opt =>
 
 // ---------- JWT ----------
 var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()!;
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(opt =>
+    {
+        opt.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        // MCP challenge：401 时带 WWW-Authenticate resource_metadata，claude.ai 据此发现授权服务器；
+        // 对现有 /api 客户端仅多一个响应头，状态码行为不变。
+        opt.DefaultChallengeScheme = McpAuthenticationDefaults.AuthenticationScheme;
+    })
     .AddJwtBearer(opt =>
     {
         opt.TokenValidationParameters = new TokenValidationParameters
@@ -56,6 +66,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 return Task.CompletedTask;
             }
         };
+    })
+    .AddMcp(opt =>
+    {
+        opt.ResourceMetadata = new()
+        {
+            AuthorizationServers = { builder.Configuration["Mcp:PublicBaseUrl"] ?? "https://kanau.apps02.pixiantong.com" },
+            ScopesSupported = ["kanau:mcp"],
+        };
     });
 builder.Services.AddAuthorization(opt =>
     opt.AddPolicy("AdminOnly", p => p.RequireClaim("isAdmin", "1")));
@@ -76,6 +94,13 @@ builder.Services.AddHangfireServer(opt => opt.WorkerCount = 4);
 
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<ICaptureNotifier, SignalRCaptureNotifier>();
+
+// ---------- MCP server（claude.ai Connectors，认证走 JWT） ----------
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddMcpServer(o => o.ServerInfo = new() { Name = "圆梦笔记 kanau", Version = "1.0.0" })
+    .WithHttpTransport(o => o.Stateless = true)
+    .WithTools<DreamTools>().WithTools<PlanTools>().WithTools<TodoTools>()
+    .WithTools<NoteTools>().WithTools<CaptureTools>().WithTools<ReviewTools>();
 builder.Services.Configure<McpOptions>(builder.Configuration.GetSection("Mcp"));
 builder.Services.AddMemoryCache();
 builder.Services.AddControllers();
@@ -88,6 +113,12 @@ builder.Services.AddCors(opt => opt.AddDefaultPolicy(p => p
     .AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
 
 var app = builder.Build();
+
+// nginx 反代走 https：转发头让框架/MCP SDK 生成正确的 https 元数据 URL
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor
+});
 
 // 自动迁移 + 种子 admin（不开放注册，账号由 admin 管理）
 using (var scope = app.Services.CreateScope())
@@ -130,6 +161,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<CaptureHub>("/hubs/capture");
+app.MapMcp("/mcp").RequireAuthorization();
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok", time = DateTime.UtcNow }));
 
 // ---------- Hangfire 定时任务（北京时间） ----------
