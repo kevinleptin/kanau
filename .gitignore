@@ -16,3 +16,4 @@ npm-debug.log*
 # misc
 .DS_Store
 *.swp
+deploy/.publish-remote/
