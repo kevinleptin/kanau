@@ -31,3 +31,11 @@
 - 密钥不入 git：appsettings.json 只留空占位，生产配置由 sync-secrets.sh 生成（gitignored）
 - LBS key（TENCENT_LBS_KEY）目前未配置：逆地址解析/地图功能自动降级为不可用，不影响其它功能
 - 孩子账号（IsChild）：AI prompt 用鼓励式简单语言；位置功能默认关闭
+
+## 2026-09-13 迁移到 bt.apps.pixiantong.com(服务器整合)
+- 域名不变,DNS 泛解析已指向 bt.apps(139.155.143.124);本机线上进程端口改为 **5106**(旧主机上的端口作废),
+  systemd 单元、nginx vhost、证书原样搬过去,数据库同名同用户。
+- **发布改为本地 WSL 构建**:`deploy/publish-remote.sh`(本机 publish + ng build → rsync → 重启),服务器不再编译;
+  `deploy/deploy.sh` 是旧的服务器端版本,留作备用。前端 package-lock 已改指 registry.npmmirror.com。
+
+- 密钥总表在 bt.apps 的 `/root/cubby-secrets.env`(三台合并后的并集),本地副本 `~/.secrets/cubby-secrets.env`。
