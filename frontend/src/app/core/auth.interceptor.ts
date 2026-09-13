@@ -18,7 +18,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         err.status === 401 &&
         !req.url.startsWith('/api/auth/')
       ) {
-        auth.logout();
+        auth.sessionExpired();
       }
       return throwError(() => err);
     })

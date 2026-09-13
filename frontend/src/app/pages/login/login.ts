@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzInputModule } from 'ng-zorro-antd/input';
@@ -63,6 +63,7 @@ export class LoginPage {
   private auth = inject(AuthService);
   private signalr = inject(SignalrService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private message = inject(NzMessageService);
 
   readonly loading = signal(false);
@@ -79,7 +80,10 @@ export class LoginPage {
         this.loading.set(false);
         this.signalr.connect();
         this.message.success('欢迎回来！');
-        this.router.navigate(['/home']);
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        this.router.navigateByUrl(
+          returnUrl?.startsWith('/') && !returnUrl.startsWith('/login') ? returnUrl : '/home'
+        );
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);

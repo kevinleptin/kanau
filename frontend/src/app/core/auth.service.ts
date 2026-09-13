@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { NzMessageService } from 'ng-zorro-antd/message';
 import { Observable, tap } from 'rxjs';
 import { AuthResponse } from './models';
 
@@ -11,6 +12,7 @@ const USER_KEY = 'kanau_user';
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private message = inject(NzMessageService);
 
   readonly user = signal<AuthResponse | null>(this.load());
 
@@ -61,5 +63,17 @@ export class AuthService {
     localStorage.removeItem(USER_KEY);
     this.user.set(null);
     if (redirect) this.router.navigate(['/login']);
+  }
+
+  /** 登录失效（401）：提示真实原因，并带 returnUrl 跳登录页；并发多个 401 只提示一次。 */
+  sessionExpired(): void {
+    const hadToken = this.isLoggedIn;
+    const current = this.router.url;
+    this.logout(false);
+    if (hadToken) this.message.warning('登录已过期，请重新登录');
+    this.router.navigate(
+      ['/login'],
+      current.startsWith('/login') ? {} : { queryParams: { returnUrl: current } }
+    );
   }
 }

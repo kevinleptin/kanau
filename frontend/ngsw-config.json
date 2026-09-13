@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/@angular/service-worker/config/schema.json",
   "index": "/index.html",
-  "navigationUrls": ["/**", "!/**/*.*", "!/api/**", "!/hubs/**"],
+  "navigationUrls": ["/**", "!/**/*.*", "!/api/**", "!/hubs/**", "!/oauth/**", "!/mcp", "!/mcp/**", "!/.well-known/**"],
   "navigationRequestStrategy": "performance",
   "assetGroups": [
     {
